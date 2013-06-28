@@ -1,4 +1,4 @@
-module Metropolis (metroStep, testing) where
+module Metropolis (metroStep) where
 
 import Control.Monad.Random
 
@@ -17,6 +17,3 @@ metroStep p delta x = do
     then return newx
     else weightselect
 
-
-
-testing = "hey"

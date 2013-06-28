@@ -1,14 +1,14 @@
 HS_SRC=$(wildcard src/*.hs src/*/*.hs)
+BIN=dist/build/pimc/pimc
 
 .PHONY: install test
 
-install: bin/pimc
+install: $(BIN)
 
-test: bin/pimc
-	bin/pimc
+test: $(BIN)
+	$(BIN)
 
-bin/pimc: $(HS_SRC)
+$(BIN): $(HS_SRC)
 	cabal configure
 	cabal build
-	ln -fs dist/build/pimc/pimc bin/pimc
 

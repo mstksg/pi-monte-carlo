@@ -1,6 +1,8 @@
 import System.Random
-import Data.Vector.Unboxed.Mutable as MV
-import Metropolis
+import PIMC
 
-main = putStrLn testing
+main = do
+  let test = testPath
+  -- putStrLn $ show $ nudge testPath 5
+  return ()
 

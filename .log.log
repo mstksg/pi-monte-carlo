@@ -1,0 +1,11 @@
+[Fri Jun 28 16:12:26 PDT 2013]	so much stuff going on here
+[Fri Jun 28 16:12:40 PDT 2013]	Control.Monad.ST
+[Fri Jun 28 16:12:55 PDT 2013]	Data.Vector.Unboxed
+[Fri Jun 28 16:12:59 PDT 2013]	Data.Vector.Unboxed.Mutable
+[Fri Jun 28 16:13:24 PDT 2013]	Data.STRef
+[Fri Jun 28 16:13:43 PDT 2013]	reference my stack overflow question http://stackoverflow.com/questions/17248024/persistently-impure-io-vectors-in-haskell-with-database-like-persistent-int
+[Fri Jun 28 16:14:55 PDT 2013]	check out this guys question maybe about implementing st and vectors http://codereview.stackexchange.com/questions/10123/haskell-use-of-the-st-monad-and-vectors
+[Fri Jun 28 16:15:50 PDT 2013]	haskell wiki examples http://www.haskell.org/haskellwiki/Monad/ST
+[Fri Jun 28 16:16:20 PDT 2013]	idk what this is but another example http://random.axman6.com/blog/?p=5
+[Fri Jun 28 16:18:24 PDT 2013]	this would make a good blog post or something huh
+[Sat Jun 29 02:15:37 PDT 2013]	my question about the condensing functions http://stackoverflow.com/q/17377408/292731

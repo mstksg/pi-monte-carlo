@@ -60,11 +60,10 @@ runMC' params qsys path n = runST $ do
     sweep params qsys mpath
   V.freeze mpath
 
-sweep :: PrimMonad m => MCParams -> QSystem -> MPath (PrimState m) -> m ()
+sweep :: MCParams -> QSystem -> MPath s -> ST s ()
 sweep params qsys mpath = do
   val <- MV.read mpath 1
   MV.write mpath 1 (val + 1)
-
 
 
 -- tST :: Path -> Int -> Int -> Int -> Path

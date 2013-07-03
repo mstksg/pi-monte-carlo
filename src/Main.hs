@@ -2,9 +2,7 @@ import System.Random
 import PIMC
 
 main = do
-  let test = testPath
-  -- putStrLn $ show $ nudge testPath 5
-  -- putStrLn $ show $ testPath
-  putStrLn $ show $ tST testPath 2 1 4
-  return ()
+  let
+    system = testSystem 10 1.0 1.0
+  putStrLn $ show $ runMC system 10000
 

@@ -5,6 +5,8 @@ import qualified Data.Vector.Unboxed.Mutable as MV
 import Control.Monad
 import Control.Monad.ST
 import Control.Monad.Primitive
+import Control.Monad.Random
+import Control.Applicative
 import Data.STRef
 import Metropolis
 
@@ -26,6 +28,7 @@ data MCSystem = MCSystem  { mcParams  :: MCParams
                           , mcPath    :: Path
                           }
 
+
 instance Show MCSystem where
   show (MCSystem params path) = show path
 
@@ -41,8 +44,8 @@ testSystem n m omega = MCSystem params path
     harmo' x = m * omega^2 * x
     path     = V.replicate n 0.0
 
-runMC :: MCSystem -> Int -> MCSystem
-runMC system n =  MCSystem params swept
+runMC :: (RandomGen g) => MCSystem -> Int -> Rand g MCSystem
+runMC system n = MCSystem params <$> swept
   where
    params = mcParams system
    path   = mcPath system
@@ -53,8 +56,8 @@ runMC system n =  MCSystem params swept
    --    sweep params qsys path
    --    V.freeze mpath
 
-runMC' :: MCParams -> QSystem -> Path -> Int -> Path
-runMC' params qsys path n = runST $ do
+runMC' :: (RandomGen g) => MCParams -> QSystem -> Path -> Int -> Rand g Path
+runMC' params qsys path n = return $ runST $ do
   mpath <- V.thaw path
   replicateM_ n $ do
     sweep params qsys mpath

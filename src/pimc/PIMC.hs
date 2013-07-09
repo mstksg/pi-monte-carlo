@@ -35,7 +35,7 @@ testParams n m omega = MCParams 0.15 1.0 0.0 n qsys
     harmo x  = 0.5 * m * omega^2 * x^2
     harmo' x = m * omega^2 * x
 
-runMC :: (RandomGen g) => MCParams -> Int -> RandT g Identity Path
+runMC :: (RandomGen g) => MCParams -> Int -> Rand g Path
 runMC params n = liftST $ runMC' params init n
   where
    init = V.replicate (pLength params) (pInit params)

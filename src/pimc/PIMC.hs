@@ -2,6 +2,7 @@ module PIMC (testParams, runMC) where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Identity
 import Control.Monad.Morph
 import Control.Monad.Random
 import Control.Monad.ST

@@ -4,6 +4,6 @@ import PIMC
 
 main = do
   let
-    system = testSystem 10 1.0 1.0
-  (evalRandIO $ runMC system 10000) >>= print
+    params = testParams 10 1.0 1.0
+  (evalRandIO $ runMC params 10000) >>= print
 

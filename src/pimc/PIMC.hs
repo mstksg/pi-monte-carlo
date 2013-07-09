@@ -1,14 +1,16 @@
 module PIMC (testSystem, runMC) where
 
+import Control.Applicative
+import Control.Monad
+import Control.Monad.Morph
+import Control.Monad.Random
+import Control.Monad.ST
+
+import Metropolis
+import Utils
+
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as MV
-import Control.Monad
-import Control.Monad.ST
-import Control.Monad.Primitive
-import Control.Monad.Random
-import Control.Applicative
-import Data.STRef
-import Metropolis
 
 type Path = V.Vector Double 
 type MPath s = MV.STVector s Double
@@ -21,13 +23,13 @@ data QSystem = QSystem  { hbar  :: Double
 
 data MCParams = MCParams  { dt      :: Double
                           , delta   :: Double
+                          , pLength :: Int
                           , qSystem :: QSystem
                           }
 
 data MCSystem = MCSystem  { mcParams  :: MCParams
                           , mcPath    :: Path
                           }
-
 
 instance Show MCSystem where
   show (MCSystem params path) = show path
@@ -38,7 +40,7 @@ testPath = V.generate 10 (exp . (* 0.5) . fromIntegral)
 testSystem :: Int -> Double -> Double -> MCSystem
 testSystem n m omega = MCSystem params path
   where
-    params   = MCParams 0.15 1.0 qsys
+    params   = MCParams 0.15 1.0 n qsys
     qsys     = QSystem 1.0 m harmo harmo'
     harmo x  = 0.5 * m * omega^2 * x^2
     harmo' x = m * omega^2 * x
@@ -50,53 +52,21 @@ runMC system n = MCSystem params <$> swept
    params = mcParams system
    path   = mcPath system
    qsys   = qSystem params
-   swept  = runMC' params qsys path n
-   -- swept  = runST $ do
-   --    mpath <- V.thaw path
-   --    sweep params qsys path
-   --    V.freeze mpath
+   swept  = liftST $ runMC' params qsys path n
 
-runMC' :: (RandomGen g) => MCParams -> QSystem -> Path -> Int -> Rand g Path
-runMC' params qsys path n = return $ runST $ do
-  mpath <- V.thaw path
-  replicateM_ n $ do
-    sweep params qsys mpath
-  V.freeze mpath
+runMC' :: (RandomGen g) => MCParams -> QSystem -> Path -> Int -> RandT g (ST s) Path
+runMC' params qsys path n = do
+  mpath <- lift $ V.thaw path
+  replicateM_ n $ sweep params qsys mpath
+  lift $ V.freeze mpath
+  
 
-sweep :: MCParams -> QSystem -> MPath s -> ST s ()
+sweep :: (RandomGen g) => MCParams -> QSystem -> MPath s -> RandT g (ST s) ()
 sweep params qsys mpath = do
-  val <- MV.read mpath 1
-  MV.write mpath 1 (val + 1)
+  mapM_ (nudge params qsys mpath) [0..(pLength params - 1)]
 
-
--- tST :: Path -> Int -> Int -> Int -> Path
--- tST path i a b = runST $ do
---   mpath <- V.thaw path
---   tSThelp mpath i
---   MV.swap mpath a b
---   V.freeze mpath
-
--- tSThelp :: PrimMonad m => MPath (PrimState m) -> Int -> m ()
--- tSThelp mpath i = do
---   val <- MV.read mpath i
---   MV.write mpath i (val + 1)
-
--- nudge = ()
-
--- runMC :: PrimMonad m => MPath (PrimState m) -> Int -> m ()
--- runMC 
-
--- runMC :: MPath s -> MPath s
--- runMC path = runST $ do
---   return $ nudge path 2
-
--- nudge :: (PrimMonad m) => MPath (PrimState m) -> Int -> m ()
--- nudge path n = do
-
--- nudge :: Path -> Integer -> Path
--- nudge path n = runST $ do
---   init <- V.thaw path
---   MV.swap init 1 5
---   MV.write init 2 (fromIntegral n)
---   V.freeze init
-
+nudge :: (RandomGen g) => MCParams -> QSystem -> MPath s -> Int -> RandT g (ST s) ()
+nudge params qsys mpath i = do
+  val <- lift $ MV.read mpath i
+  inc <- getRandom
+  lift $ MV.write mpath i (val + inc)

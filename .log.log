@@ -9,3 +9,10 @@
 [Fri Jun 28 16:16:20 PDT 2013]	idk what this is but another example http://random.axman6.com/blog/?p=5
 [Fri Jun 28 16:18:24 PDT 2013]	this would make a good blog post or something huh
 [Sat Jun 29 02:15:37 PDT 2013]	my question about the condensing functions http://stackoverflow.com/q/17377408/292731
+[Mon Jul  8 13:39:08 PDT 2013]	so much to work on
+[Mon Jul  8 13:39:18 PDT 2013]	unwrpaping nested monad transformers
+[Mon Jul  8 13:39:27 PDT 2013]	i can't believe nobody has ever done this before
+[Mon Jul  8 13:39:33 PDT 2013]	using STT and PrimMonad
+[Mon Jul  8 13:39:47 PDT 2013]	wish i could blog this as i go along
+[Mon Jul  8 13:39:57 PDT 2013]	at least i understand ST and stuff now
+[Mon Jul  8 13:40:11 PDT 2013]	it's just making it work with RandT that is the hard part.

@@ -1,12 +1,12 @@
 {-# LANGUAGE RankNTypes #-}
 
-module Utils (liftST) where
+module Utils (runReaderST) where
 
 import Control.Monad.Random
+import Control.Monad.Reader
 import Control.Monad.ST
 
-liftST :: (RandomGen g) => (forall s. RandT g (ST s) a) -> Rand g a
-liftST st = do
+runReaderST :: (RandomGen g) => (forall s. RandT g (ReaderT r (ST s)) a) -> r -> Rand g a
+runReaderST st env = do
   splittedSeed <- getSplit
-  return $ runST $ evalRandT st splittedSeed
-
+  return $ runST $ runReaderT (evalRandT st splittedSeed) env

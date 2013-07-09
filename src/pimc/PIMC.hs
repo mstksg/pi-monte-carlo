@@ -2,6 +2,8 @@ module PIMC (testParams, runMC) where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Identity
+import Control.Monad.Reader
 import Control.Monad.Morph
 import Control.Monad.Random
 import Control.Monad.ST
@@ -36,23 +38,24 @@ testParams n m omega = MCParams 0.15 1.0 0.0 n qsys
     harmo' x = m * omega^2 * x
 
 runMC :: (RandomGen g) => MCParams -> Int -> Rand g Path
-runMC params n = liftST $ runMC' params init n
+runMC params n = runReaderST (runMC' init n) params
   where
    init = V.replicate (pLength params) (pInit params)
 
-runMC' :: (RandomGen g) => MCParams -> Path -> Int -> RandT g (ST s) Path
-runMC' params path n = do
-  mpath <- lift $ V.thaw path
-  replicateM_ n $ sweep params mpath
-  lift $ V.freeze mpath
-  
+runMC' :: (RandomGen g) => Path -> Int -> RandT g (ReaderT MCParams (ST s)) Path
+runMC' path n = do
+  params <- lift $ ask
+  mpath <- lift $ lift $ V.thaw path
+  replicateM_ n $ sweep mpath
+  lift $ lift $ V.freeze mpath
 
-sweep :: (RandomGen g) => MCParams -> MPath s -> RandT g (ST s) ()
-sweep params mpath = do
-  mapM_ (nudge params mpath) [0..(pLength params - 1)]
+sweep :: (RandomGen g) => MPath s -> RandT g (ReaderT MCParams (ST s)) ()
+sweep mpath = do
+  params <- lift $ ask
+  mapM_ (nudge mpath) [0..(pLength params - 1)]
 
-nudge :: (RandomGen g) => MCParams -> MPath s -> Int -> RandT g (ST s) ()
-nudge params mpath i = do
-  val <- lift $ MV.read mpath i
+nudge :: (RandomGen g) => MPath s -> Int -> RandT g (ReaderT MCParams (ST s)) ()
+nudge mpath i = do
+  val <- lift $ lift $ MV.read mpath i
   inc <- getRandom
-  lift $ MV.write mpath i (val + inc)
+  lift $ lift $ MV.write mpath i (val + inc)

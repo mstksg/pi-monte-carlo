@@ -16,8 +16,8 @@ cabal-version:       >=1.8
 
 executable pimc
   main-is:             Main.hs
-  hs-source-dirs:      src src/pimc
+  hs-source-dirs:      src src/pimc src/ext
   -- other-modules:       
   build-depends:       base ==4.*, vector ==0.10.*, MonadRandom >=0.1.9,
-                        random ==1.0.*, primitive ==0.5.*, mmorph ==1.0.*,
-                        STMonadTrans ==0.3.*
+                        random ==1.0.*, primitive ==0.5.*, mmorph ==1.0.*
+

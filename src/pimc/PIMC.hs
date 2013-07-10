@@ -1,7 +1,8 @@
-module PIMC (testParams, runMC, runMCPath, pathEnergy) where
+module PIMC (testParams, runMCSim, pathEnergy) where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Loops
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.Morph
@@ -37,13 +38,24 @@ testParams n m omega = MCParams 0.15 1.0 0.0 n qsys
     harmo x  = 0.5 * m * omega^2 * x^2
     harmo' x = m * omega^2 * x
 
-runMC :: (RandomGen g) => MCParams -> Int -> Rand g Path
-runMC params n = runMCPath params n init
-  where
-   init = V.replicate (pLength params) (pInit params)
+runMCSim :: MCParams -> Int -> Int -> IO Path
+runMCSim params chunks chunk = 
+  concatM (replicate chunks $ runMCChunk params chunk) (initPath params)
+  -- concatM (replicate chunks (\p -> evalRandIO $ runMC params chunk p)) (initPath params)
+  -- replicateM chunks $ do
+  --   evalRandIO $ runMC params chunk (initPath params)
 
-runMCPath :: (RandomGen g) => MCParams -> Int -> Path -> Rand g Path
-runMCPath params n path = runReaderST (runMC' path n) params
+runMCChunk :: MCParams -> Int -> Path -> IO Path
+runMCChunk params chunk path = do
+  res <- evalRandIO $ runMC params chunk path
+  print $ pathEnergy params res
+  return res
+
+initPath :: MCParams -> Path
+initPath params = V.replicate (pLength params) (pInit params)
+
+runMC :: (RandomGen g) => MCParams -> Int -> Path -> Rand g Path
+runMC params n path = runReaderST (runMC' path n) params
 
 runMC' :: (RandomGen g) => Path -> Int -> RandT g (ReaderT MCParams (ST s)) Path
 runMC' path n = do

@@ -1,4 +1,4 @@
-module PIMC (testParams, runMC) where
+module PIMC (testParams, runMC, runMCPath, pathEnergy) where
 
 import Control.Applicative
 import Control.Monad
@@ -38,9 +38,12 @@ testParams n m omega = MCParams 0.15 1.0 0.0 n qsys
     harmo' x = m * omega^2 * x
 
 runMC :: (RandomGen g) => MCParams -> Int -> Rand g Path
-runMC params n = runReaderST (runMC' init n) params
+runMC params n = runMCPath params n init
   where
    init = V.replicate (pLength params) (pInit params)
+
+runMCPath :: (RandomGen g) => MCParams -> Int -> Path -> Rand g Path
+runMCPath params n path = runReaderST (runMC' path n) params
 
 runMC' :: (RandomGen g) => Path -> Int -> RandT g (ReaderT MCParams (ST s)) Path
 runMC' path n = do
@@ -93,3 +96,15 @@ kE x0 x1 = do
       dx  = x1 - x0
       vel = dx / (dt params)
   return $ 0.5 * m * vel^2
+
+pathEnergy :: MCParams -> Path -> Double
+pathEnergy params path = (V.sum $ V.map en path) / (fromIntegral $ pLength params)
+  where
+    v = pot $ qSystem params
+    v' = pot' $ qSystem params
+    en x = v x + 0.5 * (v' x) * x
+
+-- energy :: MPath s -> ReaderT MCParams (ST s) Double
+-- energy mpath = do
+--   return $ MV.map id mpath
+--   -- foldM f 0 mpath

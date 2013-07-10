@@ -7,11 +7,11 @@ import PIMC
 main :: IO ()
 main = do
   let
-    params = testParams 100 1.0 1.0
+    params = testParams 1000 1.0 1.0
   seed <- getStdGen
-  res <- evalRandIO $ runMC params 10000
-  -- res <- return $ runIdentity $ evalRandT (runMC params 10000) seed
-  -- res <- return $ runReader (evalRandT (runMC params 10000) seed) 0
-  print res
+  res <- evalRandIO $ runMC params 1000
+  print $ pathEnergy params res
+  res2 <- evalRandIO $ runMCPath params 1000 res
+  print $ pathEnergy params res2
   
 

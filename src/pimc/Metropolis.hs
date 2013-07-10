@@ -12,8 +12,8 @@ metroStep p delta x = do
     weightselect = do
       let odds = exp (p1 - p0)
       select <- getRandom
-      return (if (select < odds) then newx else x)
-  if (p1 > p0)
+      return (if select < odds then newx else x)
+  if p1 > p0
     then return newx
     else weightselect
 

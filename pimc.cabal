@@ -20,5 +20,5 @@ executable pimc
   -- other-modules:       
   build-depends:       base ==4.*, vector ==0.10.*, MonadRandom >=0.1.9,
                         random ==1.0.*, primitive ==0.5.*, mmorph ==1.0.*,
-                        mtl ==2.1.*
+                        mtl ==2.1.*, monad-loops ==0.4.*
 

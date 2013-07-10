@@ -56,11 +56,21 @@ sweep mpath = do
 
 nudge :: (RandomGen g) => MPath s -> Int -> RandT g (ReaderT MCParams (ST s)) ()
 nudge mpath i = do
-  val <- lift2 $ MV.read mpath i
-  inc <- getRandom
-  ke <- lift $ kE 1.0 2.0
-  -- lift2 $ MV.write mpath i (val + inc)
-  lift2 $ MV.write mpath i (ke + inc)
+  range <- delta <$> lift ask
+  x <- lift2 $ MV.read mpath i
+  dx <- getRandomR (-range, range)
+  s0 <- lift $ localAction mpath i 0.0
+  s1 <- lift $ localAction mpath i dx
+  let p0 = (-1) * s0
+      p1 = (-1) * s1
+  if (p1 > p0)
+    then
+      lift2 $ MV.write mpath i (x + dx)
+    else do
+      let thresh = exp (p1 - p0)
+      r <- getRandom
+      when (r < thresh) $
+        (lift2 $ MV.write mpath i (x+dx))
 
 localAction :: MPath s -> Int -> Double -> ReaderT MCParams (ST s) Double
 localAction mpath i dx = do
@@ -75,19 +85,6 @@ localAction mpath i dx = do
   kEright <- kE xright (x+dx)
   let localV  = v (x+dx)
   return $ (dt params) / (hbar system) * (kEleft + kEright + localV)
-
--- localAction :: MPath s -> Int -> ReaderT MCParams (ST s) (Double -> Double)
--- localAction mpath i = do
---   params <- ask
---   let n      = pLength params
---       system = qSystem params
---       v      = pot system
---   x <- lift $ MV.read mpath i
---   xleft <- lift $ MV.read mpath (mod (i-1) n)
---   xright <- lift $ MV.read mpath (mod (i+1) n)
---   let localKE dx = (kE xleft (x+dx)) + (kE xright (x+dx))
---       localV  dx = v (x+dx)
---   return $ (\dx -> (dt params) / (hbar system) * ((localKE dx) + (localV dx)))
 
 kE :: Double -> Double -> ReaderT MCParams (ST s) Double
 kE x0 x1 = do

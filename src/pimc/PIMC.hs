@@ -18,9 +18,9 @@ type Path = V.Vector Double
 type MPath s = MV.STVector s Double
 
 data QSystem = QSystem  { hbar  :: Double
-                        , m     :: Double
-                        , v     :: (Double -> Double)
-                        , v'    :: (Double -> Double)
+                        , mass  :: Double
+                        , pot   :: (Double -> Double)
+                        , pot'  :: (Double -> Double)
                         }
 
 data MCParams = MCParams  { dt      :: Double
@@ -45,9 +45,9 @@ runMC params n = runReaderST (runMC' init n) params
 runMC' :: (RandomGen g) => Path -> Int -> RandT g (ReaderT MCParams (ST s)) Path
 runMC' path n = do
   params <- lift $ ask
-  mpath <- lift $ lift $ V.thaw path
+  mpath <- lift2 $ V.thaw path
   replicateM_ n $ sweep mpath
-  lift $ lift $ V.freeze mpath
+  lift2 $ V.freeze mpath
 
 sweep :: (RandomGen g) => MPath s -> RandT g (ReaderT MCParams (ST s)) ()
 sweep mpath = do
@@ -56,6 +56,40 @@ sweep mpath = do
 
 nudge :: (RandomGen g) => MPath s -> Int -> RandT g (ReaderT MCParams (ST s)) ()
 nudge mpath i = do
-  val <- lift $ lift $ MV.read mpath i
-  inc <- getRandom
-  lift $ lift $ MV.write mpath i (val + inc)
+  range <- delta <$> lift ask
+  x <- lift2 $ MV.read mpath i
+  dx <- getRandomR (-range, range)
+  s0 <- lift $ localAction mpath i 0.0
+  s1 <- lift $ localAction mpath i dx
+  let p0 = (-1) * s0
+      p1 = (-1) * s1
+  if (p1 > p0)
+    then
+      lift2 $ MV.write mpath i (x + dx)
+    else do
+      let thresh = exp (p1 - p0)
+      r <- getRandom
+      when (r < thresh) $
+        (lift2 $ MV.write mpath i (x+dx))
+
+localAction :: MPath s -> Int -> Double -> ReaderT MCParams (ST s) Double
+localAction mpath i dx = do
+  params <- ask
+  let n      = pLength params
+      system = qSystem params
+      v      = pot system
+  x <- lift $ MV.read mpath i
+  xleft <- lift $ MV.read mpath (mod (i-1) n)
+  xright <- lift $ MV.read mpath (mod (i+1) n)
+  kEleft <- kE xleft (x+dx)
+  kEright <- kE xright (x+dx)
+  let localV  = v (x+dx)
+  return $ (dt params) / (hbar system) * (kEleft + kEright + localV)
+
+kE :: Double -> Double -> ReaderT MCParams (ST s) Double
+kE x0 x1 = do
+  params <- ask
+  let m   = mass $ qSystem params
+      dx  = x1 - x0
+      vel = dx / (dt params)
+  return $ 0.5 * m * vel^2

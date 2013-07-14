@@ -7,7 +7,7 @@ import PIMC
 main :: IO ()
 main = do
   let
-    params = testParams 1000 1.0 1.0
+    params = testParams 1500 1.0 1.0
   seed <- getStdGen
   runMCSim params 100 1000
   return ()

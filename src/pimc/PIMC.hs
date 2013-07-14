@@ -41,9 +41,6 @@ testParams n m omega = MCParams 0.15 1.0 0.0 n qsys
 runMCSim :: MCParams -> Int -> Int -> IO Path
 runMCSim params chunks chunk = 
   concatM (replicate chunks $ runMCChunk params chunk) (initPath params)
-  -- concatM (replicate chunks (\p -> evalRandIO $ runMC params chunk p)) (initPath params)
-  -- replicateM chunks $ do
-  --   evalRandIO $ runMC params chunk (initPath params)
 
 runMCChunk :: MCParams -> Int -> Path -> IO Path
 runMCChunk params chunk path = do

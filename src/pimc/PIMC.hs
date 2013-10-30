@@ -3,16 +3,14 @@ module PIMC (testParams, runMCSim, pathEnergy) where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Loops
-import Control.Monad.Identity
 import Control.Monad.Reader
-import Control.Monad.Morph
 import Control.Monad.Random
 import Control.Monad.ST
+import System.IO
 
-import Metropolis
 import Utils
 
-import qualified Data.Vector.Unboxed as V
+import qualified Data.Vector.Unboxed         as V
 import qualified Data.Vector.Unboxed.Mutable as MV
 
 type Path = V.Vector Double 
@@ -35,8 +33,8 @@ testParams :: Int -> Double -> Double -> MCParams
 testParams n m omega = MCParams 0.15 1.0 0.0 n qsys
   where
     qsys     = QSystem 1.0 m harmo harmo'
-    harmo x  = 0.5 * m * omega^2 * x^2
-    harmo' x = m * omega^2 * x
+    harmo x  = 0.5 * m * omega^(2 :: Int) * x^(2 :: Int)
+    harmo' x = m * omega^(2 :: Int) * x
 
 runMCSim :: MCParams -> Int -> Int -> IO Path
 runMCSim params chunks chunk = 
@@ -46,6 +44,7 @@ runMCChunk :: MCParams -> Int -> Path -> IO Path
 runMCChunk params chunk path = do
   res <- evalRandIO $ runMC params chunk path
   print $ pathEnergy params res
+  hFlush stdout
   return res
 
 initPath :: MCParams -> Path
@@ -56,7 +55,6 @@ runMC params n path = runReaderST (runMC' path n) params
 
 runMC' :: (RandomGen g) => Path -> Int -> RandT g (ReaderT MCParams (ST s)) Path
 runMC' path n = do
-  params <- lift ask
   mpath <- lift2 $ V.thaw path
   replicateM_ n $ sweep mpath
   lift2 $ V.freeze mpath
@@ -104,7 +102,7 @@ kE x0 x1 = do
   let m   = mass $ qSystem params
       dx  = x1 - x0
       vel = dx / dt params
-  return $ 0.5 * m * vel^2
+  return $ 0.5 * m * vel^(2 :: Int)
 
 pathEnergy :: MCParams -> Path -> Double
 pathEnergy params path = V.sum (V.map en path) / fromIntegral (pLength params)
